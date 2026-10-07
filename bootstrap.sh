@@ -154,9 +154,28 @@ fi
 
 # shellcheck disable=SC1091
 source /etc/os-release
-if [ "${ID:-}" != "ubuntu" ] || [ "${VERSION_ID:-}" != "24.04" ]; then
-    fail "поддерживается только Ubuntu 24.04 LTS. Обнаружено: ${PRETTY_NAME:-неизвестная система}."
+if [ "${ID:-}" != "ubuntu" ]; then
+    fail "поддерживается только Ubuntu. Обнаружено: ${PRETTY_NAME:-неизвестная система}."
     exit 1
+fi
+
+if [ "${VERSION_ID:-}" != "24.04" ]; then
+    ui
+    ui "************************************************************"
+    ui "⚠️ Обнаружена ${PRETTY_NAME:-Ubuntu неизвестной версии}."
+    ui "Скрипт не тестировался на этой версии Ubuntu."
+    ui "Рекомендуемая версия: Ubuntu 24.04 LTS."
+    ui "************************************************************"
+    ui
+
+    read -r -p "Продолжить? [y/N]: " OS_CONFIRM </dev/tty
+    case "$(trim "$OS_CONFIRM")" in
+        y|Y|yes|YES|Yes|д|Д|да|ДА|Да) ;;
+        *)
+            ui "Настройка отменена. Изменения не применялись."
+            exit 0
+            ;;
+    esac
 fi
 
 for required_command in awk grep sed sort mktemp hostname hostnamectl getent systemctl \
