@@ -1151,7 +1151,7 @@ ui
 ui "============================================================"
 ui "✅ Первоначальная настройка VPS успешно завершена"
 ui
-ui "Адрес сервера:      $SERVER_ADDRESS"
+ui "IP-адрес сервера:   $SERVER_ADDRESS"
 ui "Hostname:           $NEW_HOSTNAME"
 ui "Пользователь:       $NEW_USER"
 ui "SSH-порт:           $SSH_PORT"
