@@ -2,6 +2,14 @@
 
 Скрипт базовой настройки сервера на Ubuntu.
 
+### Установка
+
+Выполните на сервере от `root`:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/NaitSide/Ubuntu-vps-bootstrap/main/bootstrap.sh -o bootstrap.sh && bash bootstrap.sh
+```
+
 ### SSH
 
 | Параметр | Описание |
