@@ -45,6 +45,7 @@ cleanup() {
             ui "Подробности: $LOG_FILE"
         fi
         ui "============================================================"
+        ui
     fi
 
     exit "$exit_code"
@@ -190,15 +191,20 @@ if ! getent group sudo >/dev/null 2>&1; then
 fi
 
 CURRENT_HOSTNAME="$(hostname)"
-read -r -p "Введите hostname [${CURRENT_HOSTNAME}]: " NEW_HOSTNAME </dev/tty
-NEW_HOSTNAME="$(trim "${NEW_HOSTNAME:-$CURRENT_HOSTNAME}")"
+DEFAULT_HOSTNAME="${CURRENT_HOSTNAME%%.*}"
+read -r -p "Введите hostname [${DEFAULT_HOSTNAME}]: " NEW_HOSTNAME </dev/tty
+NEW_HOSTNAME="$(trim "${NEW_HOSTNAME:-$DEFAULT_HOSTNAME}")"
 if ! validate_hostname "$NEW_HOSTNAME"; then
     fail "hostname должен состоять из DNS-меток и содержать не более 64 символов."
     exit 1
 fi
 
-read -r -p "Введите имя пользователя [vpnadmin]: " NEW_USER </dev/tty
-NEW_USER="$(trim "${NEW_USER:-vpnadmin}")"
+read -r -p "Введите имя пользователя: " NEW_USER </dev/tty
+NEW_USER="$(trim "$NEW_USER")"
+if [ -z "$NEW_USER" ]; then
+    fail "имя пользователя не может быть пустым."
+    exit 1
+fi
 if ! validate_username "$NEW_USER"; then
     fail "имя пользователя должно начинаться с маленькой буквы или '_' и содержать только a-z, 0-9, '_', '-'."
     exit 1
@@ -1121,3 +1127,4 @@ ui
 ui "Проверка: sudo vps-bootstrap-audit"
 ui "Журнал:   $LOG_FILE"
 ui "============================================================"
+ui

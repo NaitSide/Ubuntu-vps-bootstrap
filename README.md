@@ -6,8 +6,9 @@
 
 ```bash
 curl -fsSL \
-  https://raw.githubusercontent.com/NaitSide/Ubuntu-vps-bootstrap/main/bootstrap.sh \
-  -o bootstrap.sh && bash bootstrap.sh
+-o bootstrap.sh \
+https://raw.githubusercontent.com/NaitSide/Ubuntu-vps-bootstrap/main/bootstrap.sh \
+&& bash bootstrap.sh
 ```
 
 ### SSH
@@ -166,7 +167,7 @@ Bootstrap применяет изменения в безопасной посл
 
 Адрес сервера:     203.0.113.10
 Hostname:           vpn-hel-01
-Пользователь:       vpnadmin
+Пользователь:       demo
 SSH-порт:           28473
 Авторизация:        только SSH-ключ
 UFW:                включён
@@ -178,6 +179,7 @@ BBR:                включён
 Не закрывайте текущую сессию, пока не проверите
 новое подключение в Termius.
 ============================================================
+
 ```
 
 Если адрес невозможно определить из текущего SSH-подключения, в отчёте будет
