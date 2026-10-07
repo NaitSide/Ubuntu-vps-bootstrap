@@ -11,6 +11,8 @@ https://raw.githubusercontent.com/NaitSide/Ubuntu-vps-bootstrap/main/bootstrap.s
 && bash bootstrap.sh
 ```
 
+![Результат первоначальной настройки VPS](img/setup-complete.png)
+
 ### SSH
 
 | Параметр | Описание |
