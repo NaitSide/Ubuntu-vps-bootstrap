@@ -16,9 +16,41 @@ exec 3>&1 4>&2
 TEMP_KEY_FILE=""
 LOGGING_STARTED="no"
 INSTALL_COMPLETE="no"
+SPINNER_PID=""
+SPINNER_MESSAGE=""
 
 ui() {
     printf '%s\n' "$*" >&3
+}
+
+start_spinner() {
+    SPINNER_MESSAGE="$1"
+    if [ ! -t 3 ]; then
+        ui "$SPINNER_MESSAGE"
+        return 0
+    fi
+
+    printf '%s' "$SPINNER_MESSAGE" >&3
+    (
+        trap - EXIT
+        trap 'exit 0' TERM INT
+        while :; do
+            for frame in '⠋' '⠙' '⠹' '⠸' '⠼' '⠴' '⠦' '⠧' '⠇' '⠏'; do
+                printf '\r%s %s' "$SPINNER_MESSAGE" "$frame" >&3
+                sleep 0.1
+            done
+        done
+    ) &
+    SPINNER_PID="$!"
+}
+
+stop_spinner() {
+    [ -n "$SPINNER_PID" ] || return 0
+    kill "$SPINNER_PID" 2>/dev/null || true
+    wait "$SPINNER_PID" 2>/dev/null || true
+    SPINNER_PID=""
+    printf '\r\033[2K%s\n' "$SPINNER_MESSAGE" >&3
+    SPINNER_MESSAGE=""
 }
 
 fail() {
@@ -32,6 +64,7 @@ fail() {
 cleanup() {
     local exit_code="$?"
     trap - EXIT
+    stop_spinner
 
     if [ -n "$TEMP_KEY_FILE" ]; then
         rm -f "$TEMP_KEY_FILE"
@@ -275,8 +308,8 @@ ui "Часовой пояс:       $TIMEZONE"
 ui "Вход под root:      будет отключён"
 ui "Вход по паролю:     будет отключён"
 ui "Авторизация:        только SSH-ключ"
-ui "UFW:                будет включён"
-ui "Fail2ban:           будет включён"
+ui "UFW:                будет установлен и включён"
+ui "Fail2ban:           будет установлен и включён"
 ui "BBR:                будет включён"
 ui "============================================================"
 
@@ -403,11 +436,12 @@ SSH_DIR="$USER_HOME/.ssh"
 install -d -o "$NEW_USER" -g "$NEW_USER" -m 0700 "$SSH_DIR"
 install -o "$NEW_USER" -g "$NEW_USER" -m 0600 "$TEMP_KEY_FILE" "$SSH_DIR/authorized_keys"
 
-ui "[4/7] Установка системных пакетов..."
+start_spinner "[4/7] Установка системных пакетов..."
 
 apt-get update -qq
 DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get install -y -qq \
     openssh-server fail2ban ufw iproute2 sudo
+stop_spinner
 
 ui "[5/7] Настройка SSH..."
 
@@ -989,13 +1023,17 @@ else
 fi
 
 status_line() {
-    local label="$1" ok="$2" success_text="$3" error_text="$4"
+    local LC_ALL=C.UTF-8
+    local label="$1:" ok="$2" success_text="$3" error_text="$4"
+    local padding=$((28 - ${#label}))
     if [ "$ok" = "yes" ]; then
-        printf '✅ %-27s %s\n' "$label:" "$success_text"
+        printf '✅ %s%*s%s\n' "$label" "$padding" "" "$success_text"
     else
-        printf '❌ %-27s %s\n' "$label:" "$error_text"
+        printf '❌ %s%*s%s\n' "$label" "$padding" "" "$error_text"
     fi
 }
+
+echo
 
 echo "🔐 Аудит Ubuntu VPS Bootstrap"
 echo
@@ -1056,8 +1094,10 @@ else
     if [ "$DETAILS" != "yes" ]; then
         echo "Подробный отчёт: sudo vps-bootstrap-audit --details"
     fi
+    echo
     exit 1
 fi
+echo
 VPS_BOOTSTRAP_AUDIT
 chmod 0755 /usr/local/sbin/vps-bootstrap-audit
 
@@ -1107,18 +1147,19 @@ fi
 INSTALL_COMPLETE="yes"
 
 ui
+ui
 ui "============================================================"
 ui "✅ Первоначальная настройка VPS успешно завершена"
 ui
-printf '%-20s %s\n' "Адрес сервера:" "$SERVER_ADDRESS" >&3
-printf '%-20s %s\n' "Hostname:" "$NEW_HOSTNAME" >&3
-printf '%-20s %s\n' "Пользователь:" "$NEW_USER" >&3
-printf '%-20s %s\n' "SSH-порт:" "$SSH_PORT" >&3
-printf '%-20s %s\n' "Авторизация:" "только SSH-ключ" >&3
-printf '%-20s %s\n' "UFW:" "включён" >&3
-printf '%-20s %s\n' "Fail2ban:" "работает" >&3
-printf '%-20s %s\n' "BBR:" "включён" >&3
-printf '%-20s %s\n' "Часовой пояс:" "$TIMEZONE" >&3
+ui "Адрес сервера:      $SERVER_ADDRESS"
+ui "Hostname:           $NEW_HOSTNAME"
+ui "Пользователь:       $NEW_USER"
+ui "SSH-порт:           $SSH_PORT"
+ui "Авторизация:        только SSH-ключ"
+ui "UFW:                включён"
+ui "Fail2ban:           работает"
+ui "BBR:                включён"
+ui "Часовой пояс:       $TIMEZONE"
 ui
 ui "Сохраните эти данные в надёжном месте."
 ui "Не закрывайте текущую сессию, пока не проверите"
